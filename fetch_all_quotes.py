@@ -45,7 +45,7 @@ for symbol in symbols:
     stock_quotes_collection.update_one(
         {"symbol": symbol},  # match condition
         {
-            "$set": {"quote": quote_payload[0], "lastUpdated": datetime.now(timezone.utc)}
+            "$set": {"quote": quote_payload[0], "lastUpdatedQuote": datetime.now(timezone.utc)}
         },
         upsert=True,
     )

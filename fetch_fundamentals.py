@@ -14,8 +14,8 @@ def fetch_fundamentals(symbol):
         response.raise_for_status()
         html_content = response.content
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching the URL: {e}")
-        exit()
+        return (f"Error fetching the URL: {e}")
+        
 
     soup = BeautifulSoup(html_content, "html.parser")
     fundamentals = soup.find("table", class_="snapshot-table2")
@@ -26,8 +26,6 @@ def fetch_fundamentals(symbol):
     company_name = soup.find(
         "h2", class_="quote-header_ticker-wrapper_company"
     ).a.text.strip()
-    print(f"Company: '{company_name}' ({company_symbol})")
-    print("--------------------------------")
 
     stock_data = {
         "company_name": company_name,
@@ -44,10 +42,5 @@ def fetch_fundamentals(symbol):
                     key = cells[i].text.strip()
                     value = cells[i + 1].text.strip()
                     stock_data["fundamentals"][key] = value
-
-        # Call LLM analysis with the scraped stock data
-        print("Fundamentals:")
-        print("--------------------------------")
-        pprint.pprint(stock_data["fundamentals"])
 
     return stock_data["fundamentals"]
