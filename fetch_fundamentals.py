@@ -1,10 +1,10 @@
-import sys
 import requests
-import pprint
 from bs4 import BeautifulSoup
+
 
 def fetch_fundamentals(symbol):
     current_symbol = symbol
+    company_name = None
 
     URL = f"https://finviz.com/quote.ashx?t={current_symbol}"
 
@@ -14,19 +14,21 @@ def fetch_fundamentals(symbol):
         response.raise_for_status()
         html_content = response.content
     except requests.exceptions.RequestException as e:
-        return (f"Error fetching the URL: {e}")
-        
+        return f"Error fetching the URL: {e}"
 
     soup = BeautifulSoup(html_content, "html.parser")
     fundamentals = soup.find("table", class_="snapshot-table2")
 
-    company_symbol = soup.find(
+    company_symbol_node = soup.find(
         "h1", class_="quote-header_ticker-wrapper_ticker"
-    ).text.strip()
-    company_name = soup.find(
-        "h2", class_="quote-header_ticker-wrapper_company"
-    ).a.text.strip()
-
+    )
+    company_symbol = (
+        company_symbol_node.text.strip() if company_symbol_node else current_symbol
+    )
+    company_content = soup.find("h2", class_="quote-header_ticker-wrapper_company")
+    if company_content and company_content.a:
+        company_name = company_content.a.text.strip()
+    
     stock_data = {
         "company_name": company_name,
         "company_symbol": company_symbol,
