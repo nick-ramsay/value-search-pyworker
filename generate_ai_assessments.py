@@ -1,16 +1,15 @@
 from fetch_fundamentals import fetch_fundamentals
 from llm_prompt import llm_analysis
-import requests
 import time
 import os
 from datetime import datetime, timezone
-from pymongo import MongoClient
 from dotenv import load_dotenv
+from mongo_client import get_mongo_client
 
 load_dotenv()
 
 
-client = MongoClient("localhost", 27017)
+client = get_mongo_client()
 db = client["value-search-py"]
 stock_quotes_collection = db["stock-quotes"]
 

@@ -2,8 +2,8 @@ import requests
 import time
 import os
 from datetime import datetime, timezone
-from pymongo import MongoClient
 from dotenv import load_dotenv
+from mongo_client import get_mongo_client
 
 load_dotenv()
 
@@ -11,7 +11,7 @@ fmp_api_key = os.getenv("FMP_API_KEY")
 if not fmp_api_key:
     raise RuntimeError("FMP_API_KEY is not set")
 
-client = MongoClient("localhost", 27017)
+client = get_mongo_client()
 db = client["value-search-py"]
 stock_symbols_collection = db["stock-symbols"] 
 stock_quotes_collection = db["stock-quotes"]

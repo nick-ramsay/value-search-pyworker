@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 
 import requests
 from dotenv import load_dotenv
-from pymongo import MongoClient, UpdateOne
+from pymongo import UpdateOne, WriteConcern
 from pymongo.errors import PyMongoError
+from mongo_client import get_mongo_client
 
 load_dotenv()
 
@@ -14,9 +15,11 @@ if not fmp_api_key:
 
 url = f"https://financialmodelingprep.com/stable/stock-list?apikey={fmp_api_key}"
 
-client = MongoClient("localhost", 27017)
+client = get_mongo_client()
 db = client["value-search-py"]
-stock_symbols_collection = db["stock-symbols"]
+stock_symbols_collection = db.get_collection(
+    "stock-symbols", write_concern=WriteConcern(w=1)
+)
 
 try:
     try:
@@ -51,17 +54,30 @@ try:
         # Create the UpdateOne operation with upsert=True
         operations.append(UpdateOne(filter_query, update_operation, upsert=True))
 
-    # Execute the bulk write operation
+    
+ 
+    # Execute the bulk write operation in batches to avoid timeouts
     if operations:
+        total_operations = len(operations)
+        batch_size = 500
+        total_batches = (total_operations // batch_size) + 1
+        total = len(operations)
+        inserted = matched = modified = 0
         try:
             print("⏳ Awaiting MongoDB bulk update. This may take a few minutes...")
-            result = stock_symbols_collection.bulk_write(operations)
+            for start in range(0, total, batch_size):
+                batch = operations[start : start + batch_size]
+                result = stock_symbols_collection.bulk_write(batch, ordered=False)
+                inserted += result.inserted_count
+                matched += result.matched_count
+                modified += result.modified_count
+                print(f"✅ Batch {start // batch_size + 1} of {total_batches} processed.")
         except PyMongoError as exc:
             raise SystemExit(f"MongoDB bulk write failed: {exc}") from exc
         print("💽 Bulk write successful.")
-        print(f"Inserted documents: {result.inserted_count}")
-        print(f"Matched documents: {result.matched_count}")
-        print(f"Modified documents: {result.modified_count}")
+        print(f"Inserted documents: {inserted}")
+        print(f"Matched documents: {matched}")
+        print(f"Modified documents: {modified}")
     else:
         print("No valid symbols found to update.")
 finally:
