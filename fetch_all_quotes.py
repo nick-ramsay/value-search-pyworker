@@ -24,6 +24,26 @@ for symbol in response:
 
 session = requests.Session()
 
+INT64_MAX = 2**63 - 1
+INT64_MIN = -2**63
+
+
+def coerce_mongo_ints(value, path=""):
+    if isinstance(value, int):
+        if value > INT64_MAX or value < INT64_MIN:
+            if path:
+                print(f"⚠️  Coercing oversized int at {path} to string.")
+            return str(value)
+        return value
+    if isinstance(value, list):
+        return [coerce_mongo_ints(item, f"{path}[{idx}]") for idx, item in enumerate(value)]
+    if isinstance(value, dict):
+        return {
+            key: coerce_mongo_ints(item, f"{path}.{key}" if path else key)
+            for key, item in value.items()
+        }
+    return value
+
 for symbol in symbols:
     url = f"https://financialmodelingprep.com/stable/quote?symbol={symbol}&apikey={fmp_api_key}"
     try:
@@ -42,10 +62,11 @@ for symbol in symbols:
     else:   
         print(f"✅ Quote returned for {symbol}...")
     
+    safe_quote = coerce_mongo_ints(quote_payload[0])
     stock_quotes_collection.update_one(
         {"symbol": symbol},  # match condition
         {
-            "$set": {"quote": quote_payload[0], "lastUpdatedQuote": datetime.now(timezone.utc)}
+            "$set": {"quote": safe_quote, "lastUpdatedQuote": datetime.now(timezone.utc)}
         },
         upsert=True,
     )
