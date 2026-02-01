@@ -1,12 +1,13 @@
 import requests
 import json
+import time
+from datetime import datetime, timezone
 import sys
+from mongo_client import get_mongo_client
 
 
 def llm_analysis(stock_data: dict) -> str:
-    print(stock_data["investment_ticker_symbol"])
-    print(stock_data["investment_name"])
-    print("--------------------------------")
+    print(f"Fetching AI assessment for {stock_data['investment_name']} ({stock_data['investment_ticker_symbol']})...")
     url = "http://localhost:11434/api/generate"
 
     prompt = f"""
@@ -47,7 +48,8 @@ def llm_analysis(stock_data: dict) -> str:
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        result = response.json()
-        return result.get("response", "No response received")
+        result = response.json().get("response", "No response received")
+        return result
     except requests.exceptions.RequestException as e:
+        print(f"Error calling Ollama: {e}")
         return f"Error calling Ollama: {e}"
