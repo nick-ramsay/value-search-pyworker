@@ -1,12 +1,9 @@
 import requests
 import json
-import time
-from datetime import datetime, timezone
-import sys
-from mongo_client import get_mongo_client
+import re
 
 
-def llm_analysis(stock_data: dict) -> str:
+def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
     print(f"Fetching AI assessment for {stock_data['investment_name']} ({stock_data['investment_ticker_symbol']})...")
     url = "http://localhost:11434/api/generate"
 
@@ -49,7 +46,12 @@ def llm_analysis(stock_data: dict) -> str:
         response = requests.post(url, json=payload)
         response.raise_for_status()
         result = response.json().get("response", "No response received")
-        return result
+        rating_match = re.search(
+            r"In my current opinion, this is a (STRONG BUY|BUY|HOLD|SELL|STRONG SELL)\.\s*$",
+            result,
+        )
+        ai_rating = rating_match.group(1) if rating_match else None
+        return result, ai_rating
     except requests.exceptions.RequestException as e:
         print(f"Error calling Ollama: {e}")
         return f"Error calling Ollama: {e}"

@@ -24,14 +24,14 @@ for quote in response:
     ai_dataset["investment_name"] = quote.get("quote").get("name")
     ai_dataset["quote"] = quote.get("quote")
 
-    assessment = llm_analysis(ai_dataset)
-
+    assessment, ai_rating = llm_analysis(ai_dataset)
 
     stock_ai_assessments_collection.update_one(
             {"symbol": ai_dataset['investment_ticker_symbol']},  # match condition
             {
                 "$set": {
                     "assessment": assessment,
+                    "aiRating": ai_rating,
                     "lastUpdatedAssessment": datetime.now(timezone.utc),
                 }
             },
