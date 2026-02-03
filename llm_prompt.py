@@ -36,8 +36,8 @@ def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
         Consider the 200 day moving average (SMA200), the 50 day moving average (SMA50), 
         and the 20 day moving average (SMA20) compared to the current price when considering whether the stock price may have reached a bottom.
         
-        Finish your analysis with a simple sentence containing a recommendation of whether to buy, hold, or sell the stock.
-        The sentence should begin with 'In my current opinion, this is a [STRONG BUY, BUY, HOLD, SELL, or STRONG SELL].'
+        Finish your analysis with a simple sentence containing a recommendation of whether to buy, neutral, or sell the stock.
+        The sentence should begin with 'In my current opinion, this is a [STRONG BUY, BUY, NEUTRAL, SELL, or STRONG SELL].'
         Don't return the response in markdown format.
         """,
     }
@@ -47,7 +47,7 @@ def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
         response.raise_for_status()
         result = response.json().get("response", "No response received")
         rating_match = re.search(
-            r"In my current opinion, this is a (STRONG BUY|BUY|HOLD|SELL|STRONG SELL)\.\s*$",
+            r"is a (STRONG BUY|BUY|NEUTRAL|SELL|STRONG SELL)\.\s*$",
             result,
         )
         ai_rating = rating_match.group(1) if rating_match else None
