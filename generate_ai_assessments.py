@@ -29,22 +29,25 @@ for quote in response:
     ai_dataset["investment_name"] = quote.get("quote").get("name")
     ai_dataset["quote"] = quote.get("quote")
 
-    if hoursSinceLastAssessment >= 24 or quote.get("lastUpdatedAiAssessment") is None:
-        assessment, ai_rating = llm_analysis(ai_dataset)
+    if (hoursSinceLastAssessment >= 24 or quote.get("lastUpdatedAiAssessment") is None):
+        if quote.get("fundamentals_original"):
+            assessment, ai_rating = llm_analysis(ai_dataset)
 
-        stock_ai_assessments_collection.update_one(
-                {"symbol": ai_dataset['investment_ticker_symbol']},  # match condition
-                {
-                    "$set": {
-                        "assessment": assessment,
-                        "aiRating": ai_rating,
-                        "lastUpdatedAssessment": current_time,
-                    }
-                },
-                upsert=True,
-            )
-        stock_quotes_collection.update_one({"symbol": ai_dataset['investment_ticker_symbol']}, {"$set": {"lastUpdatedAiAssessment": current_time}})
-        print(f"💽 MongoDB update complete for {ai_dataset['investment_ticker_symbol']}.")
+            stock_ai_assessments_collection.update_one(
+                    {"symbol": ai_dataset['investment_ticker_symbol']},  # match condition
+                    {
+                        "$set": {
+                            "assessment": assessment,
+                            "aiRating": ai_rating,
+                            "lastUpdatedAssessment": current_time,
+                        }
+                    },
+                    upsert=True,
+                )
+            stock_quotes_collection.update_one({"symbol": ai_dataset['investment_ticker_symbol']}, {"$set": {"lastUpdatedAiAssessment": current_time}})
+            print(f"💽 MongoDB update complete for {ai_dataset['investment_ticker_symbol']}.")
+        else:
+            print(f"💤 {ai_dataset['investment_ticker_symbol']} has no fundamentals data. Skipping assessment.")
     else:
         print(f"💤 {ai_dataset['investment_ticker_symbol']} has been assessed within the last 24 hours. Skipping assessment.")
 
