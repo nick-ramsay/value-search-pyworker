@@ -4,7 +4,6 @@ import re
 
 
 def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
-    print(f"Fetching AI assessment for {stock_data['investment_name']} ({stock_data['investment_ticker_symbol']})...")
     url = "http://localhost:11434/api/generate"
 
     prompt = f"""

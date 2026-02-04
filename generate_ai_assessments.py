@@ -1,8 +1,5 @@
-from fetch_fundamentals import fetch_fundamentals
 from llm_prompt import llm_analysis
-import time
-import os
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from mongo_client import get_mongo_client
 
@@ -14,25 +11,26 @@ db = client["value-search-py"]
 stock_quotes_collection = db["stock-quotes"]
 stock_ai_assessments_collection = db["stock-ai-assessments"]
 
-response = stock_quotes_collection.find({})
+response = list(stock_quotes_collection.find({}))
 
-for quote in response:
+for index, quote in enumerate(response):
     ai_dataset = {}
     current_time = datetime.now(timezone.utc)
+    hoursSinceLastAssessment = None
     if quote.get("lastUpdatedAiAssessment") is not None:
         lastAssessmentTime = quote.get("lastUpdatedAiAssessment").replace(tzinfo=timezone.utc)
-        hoursSinceLastAssessment = (current_time - lastAssessmentTime).seconds / 3600
+        hoursSinceLastAssessment = (current_time - lastAssessmentTime).total_seconds() / 3600
 
     if quote.get("fundamentals_original"):
         ai_dataset["fundamentals"] = quote.get("fundamentals_original")
     ai_dataset["investment_ticker_symbol"] = quote.get("quote").get("symbol")
     ai_dataset["investment_name"] = quote.get("quote").get("name")
     ai_dataset["quote"] = quote.get("quote")
-
-    if (hoursSinceLastAssessment >= 24 or quote.get("lastUpdatedAiAssessment") is None):
+    
+    if (hoursSinceLastAssessment is None or hoursSinceLastAssessment >= 48):
         if quote.get("fundamentals_original"):
+            print(f"🔍 Fetching AI assessment for {ai_dataset['investment_name']} ({ai_dataset['investment_ticker_symbol']}) [{index}/{len(response)}]...")
             assessment, ai_rating = llm_analysis(ai_dataset)
-
             stock_ai_assessments_collection.update_one(
                     {"symbol": ai_dataset['investment_ticker_symbol']},  # match condition
                     {
