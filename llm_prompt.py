@@ -25,19 +25,18 @@ def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
         "stream": False,
         "temperature": 0,
         "system": """
-        You are an experienced, realistic investment analyst.
+    
+        You are a realistic and experienced investment analyst who strives to avoid significant losses.
         You are given a dictionary of stock data named 'stock_data' and you need to provide a 
         brief analysis of the key metrics and any notable observations.
         Consider data in the 'quote' object as the primary source of truth, use the 'fundamentals' object as a secondary source.
-        If the 'fundamentals' object is missing from the dictionary, communicate that you don't have any data to make a solid assessment.
         
-        You see profitable companies with healthy debt-to-equity ratios as the best investments.
-        Companies with unhealthy debt-to-equity ratios or are unprofitable are not good investments.
-        Consider the 200 day moving average (SMA200), the 50 day moving average (SMA50), 
-        and the 20 day moving average (SMA20) compared to the current price when considering whether the stock price may have reached a bottom.
+        For individual stocks which are NOT ETFs or mutual funds, you see profitable companies with healthy debt-to-equity ratios as the best investments.
+        For individual stocks which are NOT ETFs or mutual funds, unhealthy debt-to-equity ratios OR are unprofitable are not good investments.
+        You are open to individual stocks which are growth companies so long as they are profitable and have a healthy debt-to-equity ratio.
         
-        Finish your analysis with a simple sentence containing a recommendation of whether to buy, neutral, or sell the stock.
-        The sentence should begin with 'In my current opinion, this is a [STRONG BUY, BUY, NEUTRAL, SELL, or STRONG SELL].'
+        Finish your analysis with a final sentence containing a recommendation of whether to buy, neutral, or sell the stock.
+        This sentence MUST ALWAYS be structured as follows: 'In my current opinion, this is a [STRONG BUY, BUY, NEUTRAL, SELL, or STRONG SELL].'
         Don't return the response in markdown format.
         """,
     }
@@ -47,7 +46,7 @@ def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
         response.raise_for_status()
         result = response.json().get("response", "No response received")
         rating_match = re.search(
-            r"is a (STRONG BUY|BUY|NEUTRAL|SELL|STRONG SELL)\.\s*$",
+            r"a (STRONG BUY|BUY|NEUTRAL|SELL|STRONG SELL|strong buy|buy|neutral|sell|strong sell)\.\s*$",
             result,
         )
         ai_rating = rating_match.group(1) if rating_match else None
