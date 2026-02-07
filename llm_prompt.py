@@ -4,17 +4,36 @@ import re
 
 
 def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
+
     url = "http://localhost:11434/api/generate"
 
     prompt = f"""
+    
+    Here is the investment quote data in a dictionary format:
+
+    {json.dumps(stock_data["quote"], indent=2)}
+
+    Here is the investment fundamentals data in a dictionary format:
+    {json.dumps(stock_data["fundamentals"], indent=2)}
+
+    If any data between the 'quote' and 'fundamentals' object conflict, then consider the 'quote' object the primary source of truth, use the 'fundamentals' object as a secondary source.
+
+    Here is the investment industry data:
+    {stock_data["industry"]}
+
+    Here is the investment sector data:
+    {stock_data["sector"]}
+
+    Here is the investment country data:
+    {stock_data["country"]}
+
+    Here is the investment description:
+    {stock_data["investmentDescription"]}
+
     Provide a short, one to two paragraph summary of your thoughts on this investment. 
     The opening sentence should introduce the company with it's name and the ticker symbol. 
 
     Don't be too technical.
-    
-    Here is the stock data in a dictionary format:
-
-    {json.dumps(stock_data, indent=2)}
 
     """
 
@@ -49,6 +68,7 @@ def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
             result,
         )
         ai_rating = rating_match.group(1) if rating_match else None
+
         return result, ai_rating
     except requests.exceptions.RequestException as e:
         print(f"Error calling Ollama: {e}")

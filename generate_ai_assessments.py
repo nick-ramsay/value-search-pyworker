@@ -26,8 +26,15 @@ for index, quote in enumerate(response):
     ai_dataset["investment_ticker_symbol"] = quote.get("quote").get("symbol")
     ai_dataset["investment_name"] = quote.get("quote").get("name")
     ai_dataset["quote"] = quote.get("quote")
+    ai_dataset["news"] = quote.get("news")
+    ai_dataset["industry"] = quote.get("industry")
+    ai_dataset["sector"] = quote.get("sector")
+    ai_dataset["country"] = quote.get("country")
+    ai_dataset["investmentDescription"] = quote.get("investmentDescription")
+
+    hourLimit = 0
     
-    if (hoursSinceLastAssessment is None or hoursSinceLastAssessment >= 48):
+    if (hoursSinceLastAssessment is None or hoursSinceLastAssessment >= hourLimit):
         if quote.get("fundamentals_original"):
             print(f"🔍 Fetching AI assessment for {ai_dataset['investment_name']} ({ai_dataset['investment_ticker_symbol']}) [{index}/{len(response)}]...")
             assessment, ai_rating = llm_analysis(ai_dataset)
@@ -47,6 +54,6 @@ for index, quote in enumerate(response):
         else:
             print(f"💤 {ai_dataset['investment_ticker_symbol']} has no fundamentals data. Skipping assessment.")
     else:
-        print(f"💤 {ai_dataset['investment_ticker_symbol']} has been assessed within the last 24 hours. Skipping assessment.")
+        print(f"💤 {ai_dataset['investment_ticker_symbol']} has been assessed within the last {hourLimit} hours. Skipping assessment.")
 
 client.close()
