@@ -18,19 +18,15 @@ def llm_analysis(stock_data: dict) -> tuple[str, str | None]:
 
     If any data between the 'quote' and 'fundamentals' object conflict, then consider the 'quote' object the primary source of truth, use the 'fundamentals' object as a secondary source.
 
-    Here is the investment industry data:
-    {stock_data["industry"]}
+    Here is the investment industry: {stock_data["industry"]}
 
-    Here is the investment sector data:
-    {stock_data["sector"]}
+    Here is the investment sector: {stock_data["sector"]}
 
-    Here is the investment country data:
-    {stock_data["country"]}
+    Here is the investment country: {stock_data["country"]}
 
-    Here is the investment description:
-    {stock_data["investmentDescription"]}
+    Here is the investment description: {stock_data["investmentDescription"]}
 
-    Provide a short, one to two paragraph summary of your thoughts on this investment. 
+    Provide a short, concise summary of your thoughts on this investment. 
     The opening sentence should introduce the company with it's name and the ticker symbol. 
 
     Don't be too technical.
